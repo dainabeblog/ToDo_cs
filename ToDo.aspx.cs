@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 
@@ -7,91 +8,79 @@ namespace ToDoApp
     public partial class ToDo : System.Web.UI.Page
     {
         private int iData = 0;
-        public bool InputCheckFlag;
+        public bool InputCheckFlag = true;
 
-        public bool ToDoCheck()
+        public bool InputCheck()
         {
-            if ((ToDoTextBox.Text == null) || (ToDoTextBox.Text.Length == 0))//.NET Framework 1.xの場合
+            var TextBoxes = new Dictionary<string, string>();
+            TextBoxes.Add("ToDo", ToDoTextBox.Text);
+            TextBoxes.Add("期限", DeadlineTextBox.Text);
+            TextBoxes.Add("予算", TextBoxBudget.Text);
+            TextBoxes.Add("人数", sPeopleNumberTextBox.Text);
+            foreach (var TextBox in TextBoxes)
             {
-                ErrorTodo.Text = "ToDoを入力してください";
+                BlankTextCheck(TextBox.Key, TextBox.Value);
+                if(TextBox.Key == "予算")
+                {
+                    if (IntCheck(TextBox.Key, TextBox.Value))
+                    {
+                        ErrorBudget.Text = "";
+                    }
+                }
+                else if(TextBox.Key == "人数")
+                {
+                    bool bPeopleNumberFlag = int.TryParse(TextBox.Value, out iData);
+                    if (IntCheck(TextBox.Key, TextBox.Value))
+                    {
+                        if (sPeopleNumberTextBox.Text == "0")
+                        {
+                            ErrorPeopleNumber.Text = "0以外の数値を入力してください";
+                            InputCheckFlag = false;
+                        }
+                        else
+                        {
+                            ErrorPeopleNumber.Text = "";
+                        }
+                    }
+                }
+            }
+            return InputCheckFlag;
+        }
+
+        public void BlankTextCheck(string Key, string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))//.NET Framework 1.xの場合
+            {
+                if (Key == "ToDo") ErrorTodo.Text = Key + "を入力してください";
+                if (Key == "期限") ErrorDeadline.Text = Key + "を入力してください";
+                if (Key == "予算") ErrorBudget.Text = Key + "を入力してください";
+                if (Key == "人数") ErrorPeopleNumber.Text = Key + "を入力してください";
                 InputCheckFlag = false;
-            } 
+            }
             else
             {
-                ErrorTodo.Text = "";
+                if (Key == "ToDo") ErrorTodo.Text = "";
+                if (Key == "期限") ErrorDeadline.Text = "";
             }
-            return InputCheckFlag;
         }
-        public bool DeadlineCheck()
+        public bool IntCheck(string Key, string value)
         {
-            if (string.IsNullOrEmpty(DeadlineTextBox.Text))//.NET Framework 2.0以降の場合
+            bool IntFlag = int.TryParse(value, out iData);
+            if (IntFlag == false)
             {
-                ErrorDeadline.Text = "期限を入力してください";
+                if (Key == "予算") ErrorBudget.Text = "数値を入力してください";
+                if (Key == "人数") ErrorPeopleNumber.Text = "数値を入力してください";
                 InputCheckFlag = false;
-            } 
-            else
-            {
-                ErrorDeadline.Text = "";
             }
             return InputCheckFlag;
         }
-        public bool BugetCheck()
-        {
-            string sBudget = TextBoxBudget.Text;
-            bool bBugetFlag = int.TryParse(sBudget, out iData);
-            if ((TextBoxBudget.Text == null) || (TextBoxBudget.Text.Trim().Length == 0))//空白文字列も含まない
-            {
-                ErrorBudget.Text = "予算を入力してください";
-                InputCheckFlag = false;
-            } 
-            else if (bBugetFlag == false)
-            {
-                ErrorBudget.Text = "数値を入力してください";
-                InputCheckFlag = false;
-            }
-            else if (bBugetFlag == true)
-            {
-                ErrorBudget.Text = "";
-            }
-            return InputCheckFlag;
-        }
-        public bool PeopleNumberCheck()
-        {
-            string sPeopleNumberText = sPeopleNumberTextBox.Text;
-            bool bPeopleNumberFlag = int.TryParse(sPeopleNumberText, out iData);
-            if (sPeopleNumberTextBox.Text == "")
-            {
-                ErrorPeopleNumber.Text = "人数を入力してください";
-                InputCheckFlag = false;
-            }
-            else if (bPeopleNumberFlag == false)
-            {
-                ErrorPeopleNumber.Text = "数値を入力してください";
-                InputCheckFlag = false;
-            }
-            else if (sPeopleNumberTextBox.Text == "0")
-            {
-                ErrorPeopleNumber.Text = "0以外の数値を入力してください";
-                InputCheckFlag = false;
-            }
-            else if (bPeopleNumberFlag == true)
-            {
-                ErrorPeopleNumber.Text = "";
-            }
-            return InputCheckFlag;
-        }
+
         protected void Page_Load(object sender, EventArgs e)
         {
 
             if (IsPostBack)
             {
-                InputCheckFlag = true;
-                ToDoCheck();
-                DeadlineCheck();
-                BugetCheck();
-                PeopleNumberCheck();
-
-                if (InputCheckFlag)
+                if (InputCheck())
                 {
                     int iBuget = int.Parse(TextBoxBudget.Text);
                     int peoplenumInt = int.Parse(sPeopleNumberTextBox.Text);
@@ -113,7 +102,6 @@ namespace ToDoApp
                         Debug.WriteLine("Division of {0} by zero.", peoplenumInt);
                     }
                 }
-   
             }
             else
             {
@@ -128,7 +116,6 @@ namespace ToDoApp
                 ToDoGridView.DataSource = dt;
                 Session["data"] = dt;
             }
-
         }
     }
 }
