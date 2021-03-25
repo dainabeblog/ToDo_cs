@@ -42,10 +42,7 @@ namespace ToDoApp
                             ErrorPeopleNumber.Text = "";
                         }
                     }
-
-
                 }
-                
             }
             return InputCheckFlag;
         }
@@ -105,7 +102,6 @@ namespace ToDoApp
                         Debug.WriteLine("Division of {0} by zero.", peoplenumInt);
                     }
                 }
-   
             }
             else
             {
@@ -120,7 +116,6 @@ namespace ToDoApp
                 ToDoGridView.DataSource = dt;
                 Session["data"] = dt;
             }
-
         }
     }
 }
